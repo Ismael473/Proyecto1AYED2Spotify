@@ -5,6 +5,10 @@
 #include <QMediaPlayer>
 #include <QProgressBar>
 #include <QHash>
+#include <QListView>
+#include <QPushButton>
+#include <QStringListModel>
+#include <QLabel>
 
 class QtWidgetsApplication2 : public QMainWindow
 {
@@ -17,19 +21,38 @@ public:
     void forwardSong();
     void rewindSong();
 
-
 protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
     void playSelectedSong(const QModelIndex& index);
-    void updateProgressBar(qint64 position);  
-
+    void updateProgressBar(qint64 position);
+    void togglePagination();
+    void nextPage();
+    void previousPage();
 
 private:
     QMediaPlayer* player;
+    QProgressBar* songProgressBar;
     static bool isPaused;
-    QProgressBar* songProgressBar; 
+    QListView* listView;            // Para actualizarlo posteriormente
+    QStringListModel* model;       
+
+    // Botones de paginación
+    QPushButton* togglePaginationButton;
+    QPushButton* nextPageButton;
+    QPushButton* previousPageButton;
+
+    // Variables para la paginación
+    bool paginationEnabled;
+    int itemsPerPage;
+    int currentPageIndex;
+    QStringList allSongs;
+    QLabel* pageInfoLabel;
+
+    // Funciones
+    void updateSongView();         // Actualiza las canciones mostradas en el listView
+    void updatePageInfoLabel();
     Ui::QtWidgetsApplication2Class ui;
     QHash<QString, QString> songPathMapping;
 };
