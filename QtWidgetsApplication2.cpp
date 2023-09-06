@@ -20,21 +20,10 @@ QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
     listView->setGeometry(0, 0, 900, 900);
     this->resize(1300, 1000);
 
-    QDir mainDirectory("canciones");
-    QStringList subfolders = mainDirectory.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-
-    for (const QString& subfolder : subfolders) {
-        QDir subDir(mainDirectory.absoluteFilePath(subfolder));
-        QStringList currentSongs = subDir.entryList(QStringList() << "*.mp3", QDir::Files);
-        for (const QString& song : currentSongs) {
-            allSongs.append(QFileInfo(song).baseName());
-            songPathMapping.insert(QFileInfo(song).baseName(), subDir.absoluteFilePath(song));
-        }
-    }
-
-    model = new QStringListModel(allSongs, this);
-    listView->setModel(model);
-    connect(listView, &QListView::clicked, this, &QtWidgetsApplication2::playSelectedSong);
+    // Botón para cargar las canciones
+    QPushButton* loadSongsButton = new QPushButton("Cargar librerias de canciones", this);
+    loadSongsButton->setGeometry(910, 130, 250, 30);
+    connect(loadSongsButton, &QPushButton::clicked, this, &QtWidgetsApplication2::loadSongs);
 
     songProgressBar = new QProgressBar(this);
     songProgressBar->setGeometry(10, 910, 880, 20);
@@ -78,6 +67,24 @@ QtWidgetsApplication2::~QtWidgetsApplication2()
     delete model;
 }
 
+void QtWidgetsApplication2::loadSongs() {
+    QDir mainDirectory("canciones");
+    QStringList subfolders = mainDirectory.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+
+    for (const QString& subfolder : subfolders) {
+        QDir subDir(mainDirectory.absoluteFilePath(subfolder));
+        QStringList currentSongs = subDir.entryList(QStringList() << "*.mp3", QDir::Files);
+        for (const QString& song : currentSongs) {
+            allSongs.append(QFileInfo(song).baseName());
+            songPathMapping.insert(QFileInfo(song).baseName(), subDir.absoluteFilePath(song));
+        }
+    }
+
+    model = new QStringListModel(allSongs, this);
+    listView->setModel(model);
+    connect(listView, &QListView::clicked, this, &QtWidgetsApplication2::playSelectedSong);
+}
+
 void QtWidgetsApplication2::playSelectedSong(const QModelIndex& index)
 {
     QString songName = index.data().toString();
@@ -86,7 +93,6 @@ void QtWidgetsApplication2::playSelectedSong(const QModelIndex& index)
     player->play();
     isPaused = false;
 }
-
 void QtWidgetsApplication2::togglePlayPause()
 {
     if (isPaused) {
