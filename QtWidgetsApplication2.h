@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QStringListModel>
 #include <QLabel>
+#include <QScrollBar>
 
 class QtWidgetsApplication2 : public QMainWindow
 {
@@ -30,6 +31,7 @@ private slots:
     void togglePagination();
     void nextPage();
     void previousPage();
+    void handleScroll(int position);
 
 private:
     QMediaPlayer* player;
