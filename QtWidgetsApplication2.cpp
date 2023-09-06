@@ -4,6 +4,7 @@
 #include <QPushButton> 
 #include <QKeyEvent>
 #include <QProgressBar>
+#include <QScrollBar>
 
 // Inicialización de la variable estática
 bool QtWidgetsApplication2::isPaused = false;
@@ -11,7 +12,7 @@ bool QtWidgetsApplication2::isPaused = false;
 QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
     : QMainWindow(parent),
     paginationEnabled(false),
-    itemsPerPage(30),
+    itemsPerPage(200),
     currentPageIndex(0)
 {
     // Configuraciones iniciales
@@ -66,6 +67,9 @@ QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
     previousPageButton = new QPushButton("Previous", this);
     previousPageButton->setGeometry(910, 90, 70, 30);
     connect(previousPageButton, &QPushButton::clicked, this, &QtWidgetsApplication2::previousPage);
+
+    // Nueva conexión para manejar el desplazamiento
+    connect(listView->verticalScrollBar(), &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);
 }
 
 QtWidgetsApplication2::~QtWidgetsApplication2()
@@ -126,24 +130,40 @@ void QtWidgetsApplication2::togglePagination()
     updateSongView();
 }
 
-void QtWidgetsApplication2::nextPage()
-{
+void QtWidgetsApplication2::handleScroll(int value) {
+    QScrollBar* verticalScrollBar = listView->verticalScrollBar();
+
+    disconnect(verticalScrollBar, &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);  // Desconectar la señal
+
+    // Si estamos al final de la barra de desplazamiento y hay una siguiente página
+    if (value == verticalScrollBar->maximum() && currentPageIndex < (allSongs.count() - 1) / itemsPerPage) {
+        nextPage();
+    }
+    // Si estamos al inicio de la barra de desplazamiento y no estamos en la primera página
+    else if (value == verticalScrollBar->minimum() && currentPageIndex > 0) {
+        previousPage();
+    }
+
+    connect(verticalScrollBar, &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);  // Reconectar la señal
+}
+
+void QtWidgetsApplication2::nextPage() {
     if (currentPageIndex < (allSongs.count() - 1) / itemsPerPage) {
         currentPageIndex++;
         updateSongView();
+        listView->verticalScrollBar()->setValue(listView->verticalScrollBar()->minimum());
     }
 }
 
-void QtWidgetsApplication2::previousPage()
-{
+void QtWidgetsApplication2::previousPage() {
     if (currentPageIndex > 0) {
         currentPageIndex--;
         updateSongView();
+        listView->verticalScrollBar()->setValue(listView->verticalScrollBar()->maximum());
     }
 }
 
-void QtWidgetsApplication2::updateSongView()
-{
+void QtWidgetsApplication2::updateSongView() {
     QStringList songsToDisplay;
 
     if (paginationEnabled) {
@@ -158,4 +178,7 @@ void QtWidgetsApplication2::updateSongView()
     delete model;
     model = new QStringListModel(songsToDisplay, this);
     listView->setModel(model);
+
+    // Restablecer la posición de desplazamiento para evitar problemas
+    listView->verticalScrollBar()->setValue(0);
 }
