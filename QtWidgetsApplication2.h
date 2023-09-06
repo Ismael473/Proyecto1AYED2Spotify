@@ -1,3 +1,6 @@
+#pragma once
+
+#include <QtWidgets/QMainWindow>
 #include "ui_QtWidgetsApplication2.h"
 #include <QMediaPlayer>
 #include <QProgressBar>
@@ -31,6 +34,7 @@ private slots:
     void nextPage();
     void previousPage();
     void handleScroll(int position);
+    void updateMemoryUsage();
 
 private:
     QMediaPlayer* player;
@@ -55,6 +59,8 @@ private:
     void updateSongView();         // Actualiza las canciones mostradas en el listView
     void updatePageInfoLabel();
     Ui::QtWidgetsApplication2Class ui;
+    QLabel* memoryUsageLabel;
+    QLabel* currentMemoryUsage;
+    QTimer* memoryUpdateTimer;
     QHash<QString, QString> songPathMapping;
 };
-
