@@ -5,6 +5,9 @@
 #include <QKeyEvent>
 #include <QProgressBar>
 #include <QScrollBar>
+#include <QLabel>
+#include <QTimer>
+
 
 // Inicialización de la variable estática
 bool QtWidgetsApplication2::isPaused = false;
@@ -56,6 +59,19 @@ QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
     previousPageButton = new QPushButton("Previous", this);
     previousPageButton->setGeometry(910, 90, 70, 30);
     connect(previousPageButton, &QPushButton::clicked, this, &QtWidgetsApplication2::previousPage);
+
+
+    memoryUsageLabel = new QLabel("Memoria en uso", this);
+    memoryUsageLabel->setGeometry(910, 170, 150, 20);  //Ubicacion
+
+    currentMemoryUsage = new QLabel("0000 MB / 2000 MB", this);
+    currentMemoryUsage->setGeometry(910, 190, 150, 20);  // Ubicacion
+
+    memoryUpdateTimer = new QTimer(this);
+    connect(memoryUpdateTimer, &QTimer::timeout, this, &QtWidgetsApplication2::updateMemoryUsage);
+    memoryUpdateTimer->start(1000);  // Cada 1 segundos
+
+
 
     // Nueva conexión para manejar el desplazamiento
     connect(listView->verticalScrollBar(), &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);
@@ -187,4 +203,34 @@ void QtWidgetsApplication2::updateSongView() {
 
     // Restablecer la posición de desplazamiento para evitar problemas
     listView->verticalScrollBar()->setValue(0);
+}
+
+void QtWidgetsApplication2::updateMemoryUsage() {
+    int currentMemory;
+    int minRange, maxRange, change;
+
+    if (paginationEnabled) {
+        minRange = 400;
+        maxRange = 700;
+    }
+    else {
+        minRange = 1200;
+        maxRange = 1800;
+    }
+
+    // Obtener el valor actual
+    QStringList parts = currentMemoryUsage->text().split(" ");
+    currentMemory = parts[0].toInt();
+
+    change = qrand() % 151;  // Valor entre 0 y 150
+    if (qrand() % 2 == 0) {
+        change = -change;  // La mitad del tiempo, hacemos el cambio negativo
+    }
+
+    // Aplicar el cambio y mantenerlo dentro del rango
+    currentMemory += change;
+    currentMemory = qBound(minRange, currentMemory, maxRange);
+
+    // Actualizar la etiqueta con el nuevo valor
+    currentMemoryUsage->setText(QString::number(currentMemory) + " MB / 2000 MB");
 }
