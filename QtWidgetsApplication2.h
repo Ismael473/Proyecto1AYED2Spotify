@@ -1,6 +1,3 @@
-#pragma once
-
-#include <QtWidgets/QMainWindow>
 #include "ui_QtWidgetsApplication2.h"
 #include <QMediaPlayer>
 #include <QProgressBar>
@@ -9,7 +6,8 @@
 #include <QPushButton>
 #include <QStringListModel>
 #include <QLabel>
-#include <QScrollBar>
+#include <QMap>
+#include <QModelIndex>
 
 class QtWidgetsApplication2 : public QMainWindow
 {
@@ -21,6 +19,7 @@ public:
     void togglePlayPause();
     void forwardSong();
     void rewindSong();
+    void loadSongs();
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -58,3 +57,4 @@ private:
     Ui::QtWidgetsApplication2Class ui;
     QHash<QString, QString> songPathMapping;
 };
+
