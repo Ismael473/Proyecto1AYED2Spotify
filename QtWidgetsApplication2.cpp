@@ -1,73 +1,77 @@
 #include "QtWidgetsApplication2.h"
-#include <QListView>
 #include <QDir>
-#include <QStringListModel>
 #include <QMediaPlayer>
 #include <QPushButton> 
 #include <QKeyEvent>
 #include <QProgressBar>
 
-//aaaaa
+// InicializaciÃ³n de la variable estÃ¡tica
 bool QtWidgetsApplication2::isPaused = false;
 
 QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent),
+    paginationEnabled(false),
+    itemsPerPage(30),
+    currentPageIndex(0)
 {
-    // Crea el QListView
-    QListView* listView = new QListView(this);
+    // Configuraciones iniciales
+    listView = new QListView(this);
     listView->setGeometry(0, 0, 900, 900);
     this->resize(1300, 1000);
 
-    // Lista para almacenar todas las canciones
-    QStringList songs;
     QDir mainDirectory("canciones");
     QStringList subfolders = mainDirectory.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
-    // Recorre cada subcarpeta
     for (const QString& subfolder : subfolders) {
         QDir subDir(mainDirectory.absoluteFilePath(subfolder));
         QStringList currentSongs = subDir.entryList(QStringList() << "*.mp3", QDir::Files);
-
-        // Agrega las canciones (solo el nombre) a la lista principal y mapea el nombre al path completo
         for (const QString& song : currentSongs) {
-            songs.append(QFileInfo(song).baseName());
+            allSongs.append(QFileInfo(song).baseName());
             songPathMapping.insert(QFileInfo(song).baseName(), subDir.absoluteFilePath(song));
         }
     }
 
-    // Configura la QStringListModel con las canciones y la asigna al QListView
-    QStringListModel* model = new QStringListModel(songs, this);
+    model = new QStringListModel(allSongs, this);
     listView->setModel(model);
+    connect(listView, &QListView::clicked, this, &QtWidgetsApplication2::playSelectedSong);
 
-    // Botón para adelantar la canción
-    QPushButton* forwardButton = new QPushButton(" (3s) >>", this);
-    forwardButton->setGeometry(1000, 10, 80, 30);
-    connect(forwardButton, &QPushButton::clicked, this, &QtWidgetsApplication2::forwardSong);
+    songProgressBar = new QProgressBar(this);
+    songProgressBar->setGeometry(10, 910, 880, 20);
+    songProgressBar->setRange(0, 30000);
 
-    // Botón para retrasar la canción
-    QPushButton* rewindButton = new QPushButton("<< (3s)", this);
-    rewindButton->setGeometry(1090, 10, 80, 30);
-    connect(rewindButton, &QPushButton::clicked, this, &QtWidgetsApplication2::rewindSong);
+    player = new QMediaPlayer(this);
+    connect(player, &QMediaPlayer::positionChanged, this, &QtWidgetsApplication2::updateProgressBar);
 
-    // Crea el botón de pausa/reanudación
     QPushButton* pauseResumeButton = new QPushButton("Pause", this);
     pauseResumeButton->setGeometry(910, 10, 80, 30);
     connect(pauseResumeButton, &QPushButton::clicked, this, &QtWidgetsApplication2::togglePlayPause);
 
-    // Crea la barra de progreso
-    songProgressBar = new QProgressBar(this);
-    songProgressBar->setGeometry(10, 910, 880, 20);
-    songProgressBar->setRange(0, 30000); // Duración máxima 30s en milisegundos
+    QPushButton* forwardButton = new QPushButton(" (3s) >>", this);
+    forwardButton->setGeometry(1000, 10, 80, 30);
+    connect(forwardButton, &QPushButton::clicked, this, &QtWidgetsApplication2::forwardSong);
 
-    // Configura el reproductor
-    player = new QMediaPlayer(this);
-    connect(player, &QMediaPlayer::positionChanged, this, &QtWidgetsApplication2::updateProgressBar); // Conexión para actualizar la barra
-    connect(listView, &QListView::clicked, this, &QtWidgetsApplication2::playSelectedSong);
+    QPushButton* rewindButton = new QPushButton("<< (3s)", this);
+    rewindButton->setGeometry(1090, 10, 80, 30);
+    connect(rewindButton, &QPushButton::clicked, this, &QtWidgetsApplication2::rewindSong);
+
+    // Botones de paginaciÃ³n
+    togglePaginationButton = new QPushButton("Toggle Pagination", this);
+    togglePaginationButton->setGeometry(910, 50, 150, 30);
+    connect(togglePaginationButton, &QPushButton::clicked, this, &QtWidgetsApplication2::togglePagination);
+
+    nextPageButton = new QPushButton("Next", this);
+    nextPageButton->setGeometry(990, 90, 70, 30);
+    connect(nextPageButton, &QPushButton::clicked, this, &QtWidgetsApplication2::nextPage);
+
+    previousPageButton = new QPushButton("Previous", this);
+    previousPageButton->setGeometry(910, 90, 70, 30);
+    connect(previousPageButton, &QPushButton::clicked, this, &QtWidgetsApplication2::previousPage);
 }
 
 QtWidgetsApplication2::~QtWidgetsApplication2()
 {
     delete player;
+    delete model;
 }
 
 void QtWidgetsApplication2::playSelectedSong(const QModelIndex& index)
@@ -78,7 +82,6 @@ void QtWidgetsApplication2::playSelectedSong(const QModelIndex& index)
     player->play();
     isPaused = false;
 }
-
 
 void QtWidgetsApplication2::togglePlayPause()
 {
@@ -97,7 +100,7 @@ void QtWidgetsApplication2::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_Space) {
         togglePlayPause();
     }
-    QMainWindow::keyPressEvent(event); // Llama al método base para manejar otros eventos de teclas
+    QMainWindow::keyPressEvent(event);
 }
 
 void QtWidgetsApplication2::updateProgressBar(qint64 position)
@@ -105,12 +108,54 @@ void QtWidgetsApplication2::updateProgressBar(qint64 position)
     songProgressBar->setValue(position);
 }
 
-void QtWidgetsApplication2::forwardSong() {
+void QtWidgetsApplication2::forwardSong()
+{
     qint64 position = player->position();
-    player->setPosition(position + 3000); // Adelanta 3 segundos (3000 milisegundos)
+    player->setPosition(position + 3000);
 }
 
-void QtWidgetsApplication2::rewindSong() {
+void QtWidgetsApplication2::rewindSong()
+{
     qint64 position = player->position();
-    player->setPosition(position - 3000); // Retrasa 3 segundos (3000 milisegundos)
+    player->setPosition(position - 3000);
+}
+
+void QtWidgetsApplication2::togglePagination()
+{
+    paginationEnabled = !paginationEnabled;
+    updateSongView();
+}
+
+void QtWidgetsApplication2::nextPage()
+{
+    if (currentPageIndex < (allSongs.count() - 1) / itemsPerPage) {
+        currentPageIndex++;
+        updateSongView();
+    }
+}
+
+void QtWidgetsApplication2::previousPage()
+{
+    if (currentPageIndex > 0) {
+        currentPageIndex--;
+        updateSongView();
+    }
+}
+
+void QtWidgetsApplication2::updateSongView()
+{
+    QStringList songsToDisplay;
+
+    if (paginationEnabled) {
+        for (int i = currentPageIndex * itemsPerPage; i < (currentPageIndex + 1) * itemsPerPage && i < allSongs.count(); ++i) {
+            songsToDisplay.append(allSongs[i]);
+        }
+    }
+    else {
+        songsToDisplay = allSongs;
+    }
+
+    delete model;
+    model = new QStringListModel(songsToDisplay, this);
+    listView->setModel(model);
 }
