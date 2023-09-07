@@ -11,6 +11,8 @@
 #include <QLabel>
 #include <QMap>
 #include <QModelIndex>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QTableWidget>
 
 class QtWidgetsApplication2 : public QMainWindow
 {
@@ -28,7 +30,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
-    void playSelectedSong(const QModelIndex& index);
+    void playSelectedSong(QTableWidgetItem* item);
     void updateProgressBar(qint64 position);
     void togglePagination();
     void nextPage();
@@ -40,7 +42,7 @@ private:
     QMediaPlayer* player;
     QProgressBar* songProgressBar;
     static bool isPaused;
-    QListView* listView;            // Para actualizarlo posteriormente
+    QTableWidget* tableWidget;         // Para actualizarlo posteriormente
     QStringListModel* model;       
 
     // Botones de paginación
