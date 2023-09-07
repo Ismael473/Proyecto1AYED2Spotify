@@ -7,6 +7,13 @@
 #include <QScrollBar>
 #include <QLabel>
 #include <QTimer>
+#include <QTableWidgetItem>
+#include <QMediaMetaData>
+#include <QEventLoop>
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
+
+
 
 
 // Inicialización de la variable estática
@@ -19,8 +26,10 @@ QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
     currentPageIndex(0)
 {
     // Configuraciones iniciales
-    listView = new QListView(this);
-    listView->setGeometry(0, 0, 900, 900);
+    tableWidget = new QTableWidget(this);
+    tableWidget->setGeometry(0, 0, 900, 900);
+    tableWidget->setColumnCount(1); // Establecer una sola columna
+    tableWidget->setHorizontalHeaderLabels({ "Songs" });
     this->resize(1300, 1000);
 
     // Botón para cargar las canciones
@@ -73,14 +82,22 @@ QtWidgetsApplication2::QtWidgetsApplication2(QWidget* parent)
 
 
 
+    // Etiqueta de información de página
+    pageInfoLabel = new QLabel(this);
+    pageInfoLabel->setGeometry(910, 210, 160, 20);
+
+
+
+    // Conectar el slot de playSelectedSong
+    connect(tableWidget, &QTableWidget::itemClicked, this, &QtWidgetsApplication2::playSelectedSong);
+
     // Nueva conexión para manejar el desplazamiento
-    connect(listView->verticalScrollBar(), &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);
+    connect(tableWidget->verticalScrollBar(), &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);
 }
 
 QtWidgetsApplication2::~QtWidgetsApplication2()
 {
     delete player;
-    delete model;
 }
 
 void QtWidgetsApplication2::loadSongs() {
@@ -90,25 +107,40 @@ void QtWidgetsApplication2::loadSongs() {
     for (const QString& subfolder : subfolders) {
         QDir subDir(mainDirectory.absoluteFilePath(subfolder));
         QStringList currentSongs = subDir.entryList(QStringList() << "*.mp3", QDir::Files);
-        for (const QString& song : currentSongs) {
-            allSongs.append(QFileInfo(song).baseName());
-            songPathMapping.insert(QFileInfo(song).baseName(), subDir.absoluteFilePath(song));
+        for (const QString& songFile : currentSongs) {
+            QString fullPath = subDir.absoluteFilePath(songFile);
+
+            TagLib::FileRef file(fullPath.toStdString().c_str());
+            if (!file.isNull() && file.tag()) {
+                TagLib::Tag* tag = file.tag();
+                QString title = QString::fromStdString(tag->title().toCString(true));  // Convert title from TagLib::String to QString
+
+                if (!title.isEmpty()) {
+                    allSongs.append(title);
+                }
+                else {
+                    allSongs.append(QFileInfo(songFile).baseName()); // Default to filename if title is empty
+                }
+            }
+            else {
+                allSongs.append(QFileInfo(songFile).baseName()); // Default to filename if file is invalid or has no tags
+            }
+            songPathMapping.insert(allSongs.last(), fullPath);
         }
     }
 
-    model = new QStringListModel(allSongs, this);
-    listView->setModel(model);
-    connect(listView, &QListView::clicked, this, &QtWidgetsApplication2::playSelectedSong);
+    updateSongView();
 }
 
-void QtWidgetsApplication2::playSelectedSong(const QModelIndex& index)
+void QtWidgetsApplication2::playSelectedSong(QTableWidgetItem* item)
 {
-    QString songName = index.data().toString();
+    QString songName = item->text();
     QString selectedSongPath = songPathMapping.value(songName);
     player->setMedia(QUrl::fromLocalFile(selectedSongPath));
     player->play();
     isPaused = false;
 }
+
 void QtWidgetsApplication2::togglePlayPause()
 {
     if (isPaused) {
@@ -150,10 +182,11 @@ void QtWidgetsApplication2::togglePagination()
 {
     paginationEnabled = !paginationEnabled;
     updateSongView();
+    updatePageInfoLabel();
 }
 
 void QtWidgetsApplication2::handleScroll(int value) {
-    QScrollBar* verticalScrollBar = listView->verticalScrollBar();
+    QScrollBar* verticalScrollBar = tableWidget->verticalScrollBar();
 
     disconnect(verticalScrollBar, &QScrollBar::valueChanged, this, &QtWidgetsApplication2::handleScroll);  // Desconectar la señal
 
@@ -173,7 +206,8 @@ void QtWidgetsApplication2::nextPage() {
     if (currentPageIndex < (allSongs.count() - 1) / itemsPerPage) {
         currentPageIndex++;
         updateSongView();
-        listView->verticalScrollBar()->setValue(listView->verticalScrollBar()->minimum());
+        tableWidget->verticalScrollBar()->setValue(tableWidget->verticalScrollBar()->minimum());
+        updatePageInfoLabel();
     }
 }
 
@@ -181,11 +215,12 @@ void QtWidgetsApplication2::previousPage() {
     if (currentPageIndex > 0) {
         currentPageIndex--;
         updateSongView();
-        listView->verticalScrollBar()->setValue(listView->verticalScrollBar()->maximum());
+        tableWidget->verticalScrollBar()->setValue(tableWidget->verticalScrollBar()->maximum());
+        updatePageInfoLabel();
     }
 }
-
 void QtWidgetsApplication2::updateSongView() {
+    tableWidget->setRowCount(0); // Resetear filas
     QStringList songsToDisplay;
 
     if (paginationEnabled) {
@@ -197,12 +232,15 @@ void QtWidgetsApplication2::updateSongView() {
         songsToDisplay = allSongs;
     }
 
-    delete model;
-    model = new QStringListModel(songsToDisplay, this);
-    listView->setModel(model);
+    for (const QString& song : songsToDisplay) {
+        int row = tableWidget->rowCount();
+        tableWidget->insertRow(row);
+        tableWidget->setItem(row, 0, new QTableWidgetItem(song));
+    }
 
     // Restablecer la posición de desplazamiento para evitar problemas
-    listView->verticalScrollBar()->setValue(0);
+    tableWidget->verticalScrollBar()->setValue(0);
+    updatePageInfoLabel();
 }
 
 void QtWidgetsApplication2::updateMemoryUsage() {
@@ -233,4 +271,14 @@ void QtWidgetsApplication2::updateMemoryUsage() {
 
     // Actualizar la etiqueta con el nuevo valor
     currentMemoryUsage->setText(QString::number(currentMemory) + " MB / 2000 MB");
+}
+
+void QtWidgetsApplication2::updatePageInfoLabel() {
+    if (paginationEnabled) {
+        int totalPages = (allSongs.count() + itemsPerPage - 1) / itemsPerPage;
+        pageInfoLabel->setText(QString("Page %1 of %2").arg(currentPageIndex + 1).arg(totalPages));
+    }
+    else {
+        pageInfoLabel->setText("");  // Vaciamos el texto si la paginación no está habilitada
+    }
 }
