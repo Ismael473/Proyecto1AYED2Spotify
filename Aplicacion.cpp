@@ -121,6 +121,7 @@ Aplicacion::Aplicacion(QWidget* parent)
     pageInfoLabel = new QLabel(this);
     pageInfoLabel->setGeometry(910, 210, 160, 20);
 
+    connect(arduinoController, &ArduinoController::buttonPressed, this, &Aplicacion::togglePlayPause);
 
 
     // Conectar el slot de playSelectedSong
@@ -402,4 +403,3 @@ void Aplicacion::sortSongsByArtist() {
     // Refrescar la vista
     updateSongView();
 }
-
