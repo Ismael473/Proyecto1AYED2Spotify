@@ -3,7 +3,6 @@
 ArduinoController::ArduinoController(QObject *parent)
     : QObject(parent), lastSentSignal('0')
 {
-    // Si quieres realizar alguna inicialización adicional, hazlo aquí.
 }
 
 ArduinoController::~ArduinoController()
