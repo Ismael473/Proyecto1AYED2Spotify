@@ -20,9 +20,11 @@ bool ArduinoController::connectToArduino(const QString &portName)
     if (!serial.open(QIODevice::ReadWrite)) {
         return false;  // Falló la conexión.
     }
+
+    connect(&serial, &QSerialPort::readyRead, this, &ArduinoController::onDataReceived);
+
     return true;
 }
-
 void ArduinoController::sendProgressValue(int value)
 {
     char signalToSend = '0';  // Definimos '0' como señal por defecto (no hará nada en el Arduino).
@@ -58,3 +60,11 @@ void ArduinoController::resetSignalSent()
 {
     lastSentSignal = '0';  // Restablecemos la última señal enviada a '0'.
 }
+void ArduinoController::onDataReceived()
+{
+    QByteArray data = serial.readAll();
+    if (data.contains('P')) {
+        emit buttonPressed();
+    }
+}
+
