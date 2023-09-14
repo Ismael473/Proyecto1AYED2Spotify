@@ -1,12 +1,15 @@
-QT += core gui multimedia multimediawidgets widgets
+QT += core gui multimedia multimediawidgets widgets serialport
+
 
 # Archivos del proyecto
 SOURCES += \
     Aplicacion.cpp \
+    ArduinoController.cpp \
     main.cpp
 
 HEADERS += \
     Aplicacion.h \
+    ArduinoController.h \
     main.h
 
 FORMS += \
