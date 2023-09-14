@@ -14,14 +14,18 @@ public:
 
     bool connectToArduino(const QString &portName);
     void sendProgressValue(int value);
-    void resetSignalSent();  // Añade este método
+    void resetSignalSent();
 
+signals:
+    void buttonPressed();
+
+private slots:
+    void onDataReceived();
 
 private:
     QSerialPort serial;
     bool sentSignal;  // Declaración de sentSignal
     char lastSentSignal;
-
 };
 
 #endif // ARDUINOCONTROLLER_H
