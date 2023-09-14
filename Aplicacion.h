@@ -15,6 +15,10 @@
 #include <QEventLoop>
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
+#include <QSpinBox>
+#include <QQueue>
+#include "ArduinoController.h"
+
 
 class Aplicacion : public QMainWindow
 {
@@ -38,6 +42,7 @@ private slots:
     void updateSongView();
     void updateMemoryUsage();
     void updatePageInfoLabel();
+    void sortSongsByArtist();
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -54,6 +59,13 @@ private:
     QLabel* currentMemoryUsage;
     QTimer* memoryUpdateTimer;
     QLabel* pageInfoLabel;
+    QLabel *songTitleLabel;
+    QLabel *songAlbumLabel;
+    QLabel *songArtistLabel;
+    QLabel *songYearLabel;
+    QSpinBox* itemsPerPageSpinBox;
+    ArduinoController *arduinoController;
+
 
     // Otros atributos de tu clase
     bool paginationEnabled;
@@ -62,6 +74,11 @@ private:
     static bool isPaused;
     QStringList allSongs;
     QMap<QString, QString> songPathMapping;
+    QMap<QString, QString> songArtistMapping; // Almacena el artista relacionado con el nombre de la canción
+    QQueue<QStringList> songPages;
+    bool firstRowLit = false;
+
+
 
 };
 
