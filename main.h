@@ -13,7 +13,7 @@ class Main : public QMainWindow
 
 public:
     Main(QWidget *parent = nullptr);
-    ~Main();
+    ~Main() override{};
 
 private:
     Ui::Main *ui;
