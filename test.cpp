@@ -1,4 +1,4 @@
-#include <../ext/googletes-main
+#include <../ext/googletest/googletest/include/gtest.h>
 #include <Aplicacion.h>
 #include <iostream>
 #include <fstream>

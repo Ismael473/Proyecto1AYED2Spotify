@@ -9,6 +9,9 @@ QT_END_NAMESPACE
 
 class Main : public QMainWindow
 {
+    /**
+     * Función encargada de correr el programa
+    */
     Q_OBJECT
 
 public:
