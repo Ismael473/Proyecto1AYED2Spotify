@@ -25,6 +25,13 @@ bool Aplicacion::isPaused = false;
 
 
 Aplicacion::Aplicacion(QWidget* parent)
+/**
+ * Función encargada de la creación de la ventana principal y de administrar su correcto funcionamiento
+ * incluyendo la conexión con el arduino y la paginación
+ * 
+ * @param parent
+ * 
+*/
     : QMainWindow(parent),
     paginationEnabled(false),
     currentPageIndex(0)
@@ -136,13 +143,20 @@ Aplicacion::Aplicacion(QWidget* parent)
 }
 
 Aplicacion::~Aplicacion()
+/**
+ * Función encargada de la liberación de espacios de memoria
+ * @return espacios de memoria libres
+*/
 {
     delete player;
     delete arduinoController;  // Libera la memoria de ArduinoController
 }
-const QString& homePath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+
 void Aplicacion::loadSongs() {
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * función encargada de encontrar los directorios donde están los archivos a utilizar y facilitar el acceso a ellos
+     * @return la información importante de las canciones mostradas en la aplicación 
+    */
     QDir mainDirectory("/home/ismael/Desktop/CancionesSpotify/fma_small");
     if(!mainDirectory.exists()){
         qWarning("No existe el directorio");
@@ -198,6 +212,11 @@ void Aplicacion::loadSongs() {
 
 void Aplicacion::playSelectedSong(QTableWidgetItem* item)
 {
+    /**
+     * Función encargada de la reproducción de los archivos de audio
+     * @param QTableWidgetItem* item
+     * @return reproduce la canción selecionada 
+    */
     QString songName = item->text();
     QString selectedSongPath = songPathMapping.value(songName);
     player->setMedia(QUrl::fromLocalFile(selectedSongPath));
@@ -223,6 +242,10 @@ void Aplicacion::playSelectedSong(QTableWidgetItem* item)
 
 void Aplicacion::togglePlayPause()
 {
+    /**
+     * Función encargada de pausar o reproducir los archivos
+     * @return una señal que hace que se pause o se reproduzca el archivo de audio
+    */
     if (isPaused) {
         player->play();
         isPaused = false;
@@ -235,6 +258,10 @@ void Aplicacion::togglePlayPause()
 
 void Aplicacion::keyPressEvent(QKeyEvent* event)
 {
+    /**
+     * Función encargada de obtener el input de teclado que implementa el boton de espacio
+     * @return Una señal que representa que se pulsó la tecla espaciadora
+    */
     if (event->key() == Qt::Key_Space) {
         togglePlayPause();
     }
@@ -243,6 +270,10 @@ void Aplicacion::keyPressEvent(QKeyEvent* event)
 
 void Aplicacion::updateProgressBar(qint64 position)
 {
+    /**
+     * Función encargada de mostrar graficamente que el progreso de reproducción del archivo de audio
+     * @return una representación visual de cuanto ha pasado reproduciendose un archivo de audio
+    */
     songProgressBar->setValue(position);
     // Imprimir el progreso de la canción
     qDebug() << "Progreso de la canción:" << position;
@@ -253,17 +284,29 @@ void Aplicacion::updateProgressBar(qint64 position)
 
 void Aplicacion::forwardSong()
 {
+    /**
+     * Función encargada de pasar a la siguiente canción
+     * @return avanza a la siguiente canción
+    */
     qint64 position = player->position();
     player->setPosition(position + 3000);
 }
 
 void Aplicacion::rewindSong()
 {
+    /**
+     * Función encargada de regresar la canción al inicio o a regresar a la canción anterior
+     * @return La canción que ya se estaba reproduciendo o la canción anterior a la que se está reproduciendo
+    */
     qint64 position = player->position();
     player->setPosition(position - 3000);
 }
 
 void Aplicacion::togglePagination() {
+    /**
+     * Función encargada de alternar la paginación de las canciones
+     * @return un nuevo set de canciones.
+    */
     paginationEnabled = !paginationEnabled;
     if (paginationEnabled) {
         itemsPerPage = itemsPerPageSpinBox->value();
@@ -276,6 +319,11 @@ void Aplicacion::togglePagination() {
 
 
 void Aplicacion::handleScroll(int value) {
+    /**
+     * Función encargada de poder mostrar las canciones cuando se desliza hacia abajo en la lista
+     * @param int value
+     * @return La visualización de las canciones conforme se va deslizando hacia abajo
+    */
     QScrollBar* verticalScrollBar = tableWidget->verticalScrollBar();
 
     disconnect(verticalScrollBar, &QScrollBar::valueChanged, this, &Aplicacion::handleScroll);  // Desconectar la señal
@@ -293,6 +341,10 @@ void Aplicacion::handleScroll(int value) {
 }
 
 void Aplicacion::nextPage() {
+    /**
+     * Función encargada de cargar la siguiente pagina cuando no se pudieron mostrar todas las canciones en una misma página
+     * @return El resto de canciones que no se presentan en la página actual
+    */
     if (!songPages.isEmpty()) {
         songPages.dequeue();  // Eliminar la página más antigua
 
@@ -309,6 +361,10 @@ void Aplicacion::nextPage() {
 }
 
 void Aplicacion::previousPage() {
+    /**
+     * Función que muestra las canciones que ya se llegaron a cargar en la página anterior
+     * @return La canciones que ya se habían cargado previamente
+    */
     if (currentPageIndex > 0) {
         songPages.removeLast();  // Eliminar la página más reciente
 
@@ -325,6 +381,10 @@ void Aplicacion::previousPage() {
 }
 
 void Aplicacion::updateSongView() {
+    /**
+     * Función encargada de ir actualizando el visualizador de canciones
+     * @return El visualizador de canciones ya actualizado
+    */
     tableWidget->setRowCount(0); // Resetear filas
     QStringList songsToDisplay;
 
@@ -351,6 +411,10 @@ void Aplicacion::updateSongView() {
 }
 
 void Aplicacion::updateMemoryUsage() {
+    /**
+     * Función encargada de actualizar el uso de memoria
+     * @return Información actualizada con respecto al uso de memoria
+    */
     int currentMemory;
     int minRange, maxRange, change;
 
@@ -381,6 +445,10 @@ void Aplicacion::updateMemoryUsage() {
 }
 
 void Aplicacion::updatePageInfoLabel() {
+    /**
+     * Función encargada de actualizar las etiquetas de información
+     * @return las etiquetas de información ya actualizadas
+    */
     if (paginationEnabled) {
         int totalPages = (allSongs.count() + itemsPerPage - 1) / itemsPerPage;
         pageInfoLabel->setText(QString("Page %1 of %2").arg(currentPageIndex + 1).arg(totalPages));
@@ -390,6 +458,10 @@ void Aplicacion::updatePageInfoLabel() {
     }
 }
 void Aplicacion::sortSongsByArtist() {
+    /**
+     * Función encargada de acomodar las canciones por artista
+     * @return Las canciones ordenadas alfabeticamente por nombre de artista
+    */
     // Convertir el QMap a una lista de pares
     QList<QPair<QString, QString>> songArtistPairs;
     QMap<QString, QString>::iterator it;

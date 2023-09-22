@@ -13,7 +13,11 @@ ArduinoController::~ArduinoController()
 }
 
 bool ArduinoController::connectToArduino(const QString &portName)
-{
+{ 
+    /**
+     * Función encargada de conectar el software de la computadora con el del arduino
+     * @return true para establecer que se llegó a establecer una conexión exitosa
+    */
     serial.setPortName(portName);
     serial.setBaudRate(QSerialPort::Baud9600);
 
@@ -27,6 +31,10 @@ bool ArduinoController::connectToArduino(const QString &portName)
 }
 void ArduinoController::sendProgressValue(int value)
 {
+    /**
+     * Función encargada de enviar un valor de barra de progreso al arduino
+     * @return Una barra de progeso en hardware creada con leds
+    */
     char signalToSend = '0';  // Definimos '0' como señal por defecto (no hará nada en el Arduino).
 
     if (value < 2300 || value > 29000) {
@@ -58,10 +66,18 @@ void ArduinoController::sendProgressValue(int value)
 
 void ArduinoController::resetSignalSent()
 {
+    /**
+     * Función encargada de reestablecer los valores de las señales utilizadas
+     * @return establece las señales a 0
+    */
     lastSentSignal = '0';  // Restablecemos la última señal enviada a '0'.
 }
 void ArduinoController::onDataReceived()
 {
+    /**
+     * Función encargada de obtener la información recibida por el arduino
+     * @return La información recibida por el arduino
+    */
     QByteArray data = serial.readAll();
     if (data.contains('P')) {
         emit buttonPressed();
