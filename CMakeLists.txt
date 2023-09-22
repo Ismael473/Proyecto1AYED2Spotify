@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.5)
+project(modio)
+set (CMAKE_CXX_STANDARD 11)
+
+
+IF( test AND test STREQUAL "on")
+    message("Testing enabled")
+    file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/*.cpp)
+    add_subdirectory(ext/googletest)
+    enable_testing()
+    include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+    add_executable(runUnitTest ${TEST_SRC_FILES})
+    target_link_libraries(runUnitTest gtest gtest_main)
+    add_test(UnitTests runUnitTest)
+ENDIF()

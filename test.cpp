@@ -1,10 +1,7 @@
-#include <../ext/googletest/googletest/include/gtest.h>
-#include <Aplicacion.h>
-#include <iostream>
-#include <fstream>
+#include "../ext/googletest/googletest/include/gtest/gtest.h"
+#include "arduinoController.h"
 
-
-TEST(AplicaionTest, loadSongs){
-
+TEST(connectToArduino, connect){
+    EXPECT_TRUE(true);
 }
 
