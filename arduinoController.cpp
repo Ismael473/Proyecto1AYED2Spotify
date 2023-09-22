@@ -1,4 +1,4 @@
-#include "ArduinoController.h"
+#include "arduinoController.h"
 
 ArduinoController::ArduinoController(QObject *parent)
     : QObject(parent), lastSentSignal('0')

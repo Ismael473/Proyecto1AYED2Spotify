@@ -17,7 +17,7 @@
 #include <taglib/tag.h>
 #include <QSpinBox>
 #include <QQueue>
-#include "ArduinoController.h"
+#include "arduinoController.h"
 
 
 class Aplicacion : public QMainWindow

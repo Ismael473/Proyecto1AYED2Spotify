@@ -1,4 +1,4 @@
-#include "Aplicacion.h"
+#include "aplicacion.h"
 #include <QDir>
 #include <QMediaPlayer>
 #include <QPushButton>
@@ -13,13 +13,16 @@
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
 #include <QSpinBox>
-#include "ArduinoController.h"
+#include "arduinoController.h"
 #include <QMessageBox>
 #include <QDebug>
+#include <QStandardPaths>
 
 
 // Inicialización de la variable estática
 bool Aplicacion::isPaused = false;
+
+
 
 Aplicacion::Aplicacion(QWidget* parent)
     : QMainWindow(parent),
@@ -137,9 +140,16 @@ Aplicacion::~Aplicacion()
     delete player;
     delete arduinoController;  // Libera la memoria de ArduinoController
 }
-
+const QString& homePath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 void Aplicacion::loadSongs() {
-    QDir mainDirectory("D:/usuarios/DAD/ProyectoQTCreator/untitled/canciones");
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    QDir mainDirectory("/home/ismael/Desktop/CancionesSpotify/fma_small");
+    if(!mainDirectory.exists()){
+        qWarning("No existe el directorio");
+    }else{
+        qWarning("Lo encontró");
+    }
+
     QStringList subfolders = mainDirectory.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
     allSongs.clear();  // Asegurarse de que la lista esté vacía antes de cargar nuevas canciones

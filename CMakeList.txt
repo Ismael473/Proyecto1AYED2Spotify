@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION)
+project(modio)
+set(CMake_CXX_STANDARD 11)
+IF( test AND test STREQUAL "on"){
+
+    message("testing enabled")
+    file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+    add_subdirectory(ext/googletest)
+    enable_testing()
+    incldue_directories(${gtest_SOURCE_DIR})/include ${gtest_SOURCE_DIR}
+    add_executable(runUnitTest gtest gtest_main)
+    add_test(UnitTests runUnitTest)
+}ENDIF()
